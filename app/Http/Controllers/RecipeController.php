@@ -13,11 +13,25 @@ class RecipeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $recipes = Recipe::with(['category', 'user', 'ingredients', 'steps'])->get();
+        $query = Recipe::with(['category', 'user']);
 
-        return view('recipes.index', compact('recipes'));
+        // Search by title
+        if ($request->search) {
+            $query->where('title', 'like', '%'.$request->search.'%');
+        }
+
+        // Filter by category
+        if ($request->category) {
+            $query->where('category_id', $request->category);
+        }
+
+        $recipes = $query->latest()->paginate(6)->withQueryString();
+
+        $categories = Category::all();
+
+        return view('recipes.index', compact('recipes', 'categories'));
     }
 
     /**
@@ -41,7 +55,15 @@ class RecipeController extends Controller
             'description' => 'nullable|string',
             'cooking_time' => 'nullable|integer',
             'difficulty' => 'required|in:easy,medium,hard',
+
             'category_id' => 'required|exists:categories,id',
+
+            'ingredients' => 'required|array|min:1',
+            'ingredients.*.name' => 'required|string|max:255',
+
+            'steps' => 'required|array|min:1',
+            'steps.*.instruction' => 'required|string',
+            'image' => 'nullable|image|max:2048', // max 2MB
         ]);
 
         // 2. IMAGE UPLOAD
@@ -56,7 +78,7 @@ class RecipeController extends Controller
 
             $imagePath = 'uploads/recipes/'.$fileName;
         }
-        // dd($imagePath);
+
         // 3. CREATE RECIPE FIRST
         $recipe = Recipe::create([
             'user_id' => Auth::id(),
@@ -69,7 +91,7 @@ class RecipeController extends Controller
         ]);
 
         // 4. INGREDIENTS
-        if ($request->ingredients) {
+        if (! empty($request->ingredients)) {
             foreach ($request->ingredients as $ingredient) {
                 if (! empty($ingredient['name'])) {
                     $recipe->ingredients()->create([
@@ -81,7 +103,7 @@ class RecipeController extends Controller
         }
 
         // 5. STEPS
-        if ($request->steps) {
+        if (! empty($request->steps)) {
             foreach ($request->steps as $step) {
                 if (! empty($step['instruction'])) {
                     $recipe->steps()->create([
@@ -111,7 +133,11 @@ class RecipeController extends Controller
      */
     public function edit(Recipe $recipe)
     {
-        //
+        $categories = Category::all();
+
+        $recipe->load(['ingredients', 'steps']);
+
+        return view('recipes.edit', compact('recipe', 'categories'));
     }
 
     /**
@@ -119,7 +145,76 @@ class RecipeController extends Controller
      */
     public function update(Request $request, Recipe $recipe)
     {
-        //
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'cooking_time' => 'nullable|integer',
+            'difficulty' => 'required|in:easy,medium,hard',
+
+            'category_id' => 'required|exists:categories,id',
+
+            'ingredients' => 'required|array|min:1',
+            'ingredients.*.name' => 'required|string|max:255',
+
+            'steps' => 'required|array|min:1',
+            'steps.*.instruction' => 'required|string',
+
+            'image' => 'nullable|image|max:2048',
+        ]);
+
+        // 2. IMAGE UPLOAD
+        $imagePath = null;
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+
+            $fileName = time().'_'.$file->getClientOriginalName();
+
+            $file->move(public_path('uploads/recipes'), $fileName);
+
+            $imagePath = 'uploads/recipes/'.$fileName;
+        }
+
+        // 3. UPDATE RECIPE
+        $recipe->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'cooking_time' => $request->cooking_time,
+            'difficulty' => $request->difficulty,
+            'category_id' => $request->category_id,
+            'ingredients' => $request->ingredients,
+            'steps' => $request->steps,
+            'image' => $imagePath ?? $recipe->image, // keep old image if
+        ]);
+
+        // 4. UPDATE INGREDIENTS
+        $recipe->ingredients()->delete();
+        if (! empty($request->ingredients)) {
+            foreach ($request->ingredients as $ingredient) {
+                if (! empty($ingredient['name'])) {
+                    $recipe->ingredients()->create([
+                        'name' => $ingredient['name'],
+                        'quantity' => $ingredient['quantity'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        // 5. UPDATE STEPS
+        $recipe->steps()->delete();
+        if (! empty($request->steps)) {
+            foreach ($request->steps as $step) {
+                if (! empty($step['instruction'])) {
+                    $recipe->steps()->create([
+                        'step_number' => $step['step_number'] ?? 1,
+                        'instruction' => $step['instruction'],
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->route('recipes.index')
+            ->with('success', 'Recipe updated successfully!');
     }
 
     /**
@@ -127,6 +222,9 @@ class RecipeController extends Controller
      */
     public function destroy(Recipe $recipe)
     {
-        //
+        $recipe->delete();
+
+        return redirect()->route('recipes.index')
+            ->with('success', 'Recipe deleted successfully!');
     }
 }
