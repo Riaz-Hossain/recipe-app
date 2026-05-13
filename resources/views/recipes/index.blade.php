@@ -1,17 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
-    <form method="GET" action="{{ route('recipes.index') }}" class="mb-6 flex flex-col md:flex-row gap-3">
+    <!-- HEADER -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">Discover Recipes</h1>
+        <p class="text-gray-500">Find, cook and share amazing food ideas</p>
+    </div>
 
-        <!-- Search Input -->
+    <!-- SEARCH BAR -->
+    <form method="GET" action="{{ route('recipes.index') }}" class="bg-white p-4 rounded-xl shadow mb-6 flex gap-3">
+
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search recipes..."
-            class="border rounded-lg p-2 w-full md:w-1/3">
+            class="w-full border rounded-lg p-2">
 
-        <!-- Category Filter -->
-        <select name="category" class="border rounded-lg p-2 w-full md:w-1/4">
-
-            <option value="">All Categories</option>
-
+        <select name="category" class="border rounded-lg p-2">
+            <option value="">All</option>
             @foreach ($categories as $category)
                 <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
                     {{ $category->name }}
@@ -19,51 +22,47 @@
             @endforeach
         </select>
 
-        <!-- Submit -->
-        <button class="bg-blue-500 text-white px-4 py-2 rounded-lg">
+        <button class="bg-black text-white px-4 py-2 rounded-lg">
             Search
         </button>
-
     </form>
 
-    <h1 class="text-2xl font-bold mb-6">Recipes</h1>
-
-    <!-- add new recipe button -->
-    <div class="mb-6">
-        <a href="{{ route('recipes.create') }}" class="bg-black text-white px-4 py-2 rounded">
-            ➕ Add New Recipe
-        </a>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- CARDS -->
+    <div class="grid md:grid-cols-3 gap-6">
 
         @foreach ($recipes as $recipe)
-            <div class="bg-white rounded-xl shadow p-4">
+            <a href="{{ route('recipes.show', $recipe->id) }}"
+                class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
 
+                <!-- IMAGE -->
                 @if ($recipe->image)
-                    <img src="{{ asset($recipe->image) }}" class="rounded-lg mb-3">
+                    <img src="{{ asset($recipe->image) }}" class="h-40 w-full object-cover">
+                @else
+                    <div class="h-40 bg-gray-200"></div>
                 @endif
 
-                <h2 class="text-lg font-semibold">
-                    <a href="{{ route('recipes.show', $recipe->id) }}">
-                        {{ $recipe->title }}
-                    </a>
-                </h2>
+                <div class="p-4">
 
-                <p class="text-sm text-gray-500">
-                    {{ $recipe->category?->name ?? 'No Category' }}
-                </p>
+                    <h2 class="font-semibold text-lg">{{ $recipe->title }}</h2>
 
-                <p class="text-sm">
-                    ⏱ {{ $recipe->cooking_time }} min
-                </p>
+                    <p class="text-sm text-gray-500">
+                        {{ $recipe->category?->name ?? 'Uncategorized' }}
+                    </p>
 
-            </div>
+                    <div class="mt-2 text-sm text-gray-600 flex justify-between">
+                        <span>⏱ {{ $recipe->cooking_time }} min</span>
+                        <span>🔥 {{ ucfirst($recipe->difficulty) }}</span>
+                    </div>
+
+                </div>
+
+            </a>
         @endforeach
 
     </div>
 
-    @if ($recipes->isEmpty())
-        <p class="text-gray-500 mt-4">No recipes found.</p>
-    @endif
+    <!-- PAGINATION -->
+    <div class="mt-8 flex justify-center">
+        {{ $recipes->links() }}
+    </div>
 @endsection
