@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RecipeController;
+use App\Models\Recipe;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -9,7 +10,18 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+
+    $user = auth()->user();
+
+    $recipes = Recipe::where('user_id', $user->id)
+        ->latest()
+        ->take(5)
+        ->get();
+
+    $recipeCount = Recipe::where('user_id', $user->id)->count();
+
+    return view('dashboard', compact('recipes', 'recipeCount'));
+
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

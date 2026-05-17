@@ -63,11 +63,48 @@
                 </select>
             </div>
 
-            <!-- Ingredients and Steps will be added in future iterations -->
-            <div class="mb-6">
-                <label class="block font-medium mb-1">Ingredients and Steps</label>
-                <p class="text-gray-500 text-sm">Editing ingredients and steps will be available in a future update.</p>
+
+            <hr class="my-6">
+
+            <h2 class="text-xl font-semibold mb-3">Ingredients</h2>
+
+            <div id="ingredients-container">
+                @foreach ($recipe->ingredients as $index => $ingredient)
+                    <div class="flex gap-2 mb-2 items-center">
+                        <input type="text" name="ingredients[{{ $index }}][name]"
+                            value="{{ $ingredient->name }}" class="w-1/2 border rounded-lg p-2">
+
+                        <input type="text" name="ingredients[{{ $index }}][quantity]"
+                            value="{{ $ingredient->quantity }}" class="w-1/2 border rounded-lg p-2">
+
+                        <button type="button" onclick="removeItem(this)"
+                            class="bg-red-500 text-white px-3 py-1 rounded-lg">
+                            ✕
+                        </button>
+                    </div>
+                @endforeach
             </div>
+
+            <button type="button" onclick="addIngredient()" class="text-blue-500 mb-6">+ Add Ingredient</button>
+
+            <hr class="my-6">
+
+            <h2 class="text-xl font-semibold mb-3">Steps</h2>
+
+            <div id="steps-container">
+                @foreach ($recipe->steps as $index => $step)
+                    <div class="mb-2 flex gap-2 items-center">
+                        <textarea name="steps[{{ $index }}][instruction]" class="w-full border rounded-lg p-2">{{ $step->instruction }}</textarea>
+
+                        <button type="button" onclick="removeItem(this)"
+                            class="bg-red-500 text-white px-3 py-1 rounded-lg">
+                            ✕
+                        </button>
+                    </div>
+                @endforeach
+            </div>
+
+            <button type="button" onclick="addStep()" class="text-blue-500 mb-6">+ Add Step</button>
 
             <!-- Current Image -->
             @if ($recipe->image)
@@ -99,4 +136,44 @@
         </form>
 
     </div>
+
+    <script>
+        let ingredientIndex = {{ $recipe->ingredients->count() }};
+        let stepIndex = {{ $recipe->steps->count() }};
+
+        function addIngredient() {
+            const container = document.getElementById('ingredients-container');
+
+            const html = `
+        <div class="flex gap-2 mb-2">
+            <input type="text" name="ingredients[${ingredientIndex}][name]" placeholder="Ingredient name"
+                class="w-1/2 border rounded-lg p-2">
+            <input type="text" name="ingredients[${ingredientIndex}][quantity]" placeholder="Quantity"
+                class="w-1/2 border rounded-lg p-2">
+        </div>
+    `;
+
+            container.insertAdjacentHTML('beforeend', html);
+            ingredientIndex++;
+        }
+
+        function addStep() {
+            const container = document.getElementById('steps-container');
+
+            const html = `
+        <div class="mb-2">
+            <textarea name="steps[${stepIndex}][instruction]" placeholder="Step instruction"
+                class="w-full border rounded-lg p-2"></textarea>
+        </div>
+    `;
+
+            container.insertAdjacentHTML('beforeend', html);
+            stepIndex++;
+        }
+
+        function removeItem(button) {
+            button.closest('div').remove();
+        }
+    </script>
+
 @endsection

@@ -2,20 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreRecipeRequest;
 use App\Models\Category;
 use App\Models\Recipe;
+use App\Services\RecipeService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class RecipeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    use AuthorizesRequests;
+
+    protected $service;
+
+    public function __construct(RecipeService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index(Request $request)
     {
-        $query = Recipe::with(['category', 'user']);
+        $query = Recipe::with(['category', 'user'])
+            ->where('user_id', Auth::id());
 
         // Search by title
         if ($request->search) {
@@ -47,72 +56,11 @@ class RecipeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreRecipeRequest $request)
     {
-        // 1. VALIDATION FIRST
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'cooking_time' => 'nullable|integer',
-            'difficulty' => 'required|in:easy,medium,hard',
-
-            'category_id' => 'required|exists:categories,id',
-
-            'ingredients' => 'required|array|min:1',
-            'ingredients.*.name' => 'required|string|max:255',
-
-            'steps' => 'required|array|min:1',
-            'steps.*.instruction' => 'required|string',
-            'image' => 'nullable|image|max:2048', // max 2MB
+        $this->service->create($request->validated() + [
+            'image' => $request->file('image'),
         ]);
-
-        // 2. IMAGE UPLOAD
-        $imagePath = null;
-
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-
-            $fileName = time().'_'.$file->getClientOriginalName();
-
-            $file->move(public_path('uploads/recipes'), $fileName);
-
-            $imagePath = 'uploads/recipes/'.$fileName;
-        }
-
-        // 3. CREATE RECIPE FIRST
-        $recipe = Recipe::create([
-            'user_id' => Auth::id(),
-            'category_id' => $request->category_id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'cooking_time' => $request->cooking_time,
-            'difficulty' => $request->difficulty,
-            'image' => $imagePath,
-        ]);
-
-        // 4. INGREDIENTS
-        if (! empty($request->ingredients)) {
-            foreach ($request->ingredients as $ingredient) {
-                if (! empty($ingredient['name'])) {
-                    $recipe->ingredients()->create([
-                        'name' => $ingredient['name'],
-                        'quantity' => $ingredient['quantity'] ?? null,
-                    ]);
-                }
-            }
-        }
-
-        // 5. STEPS
-        if (! empty($request->steps)) {
-            foreach ($request->steps as $step) {
-                if (! empty($step['instruction'])) {
-                    $recipe->steps()->create([
-                        'step_number' => $step['step_number'] ?? 1,
-                        'instruction' => $step['instruction'],
-                    ]);
-                }
-            }
-        }
 
         return redirect()->route('recipes.index')
             ->with('success', 'Recipe created successfully!');
@@ -123,6 +71,8 @@ class RecipeController extends Controller
      */
     public function show(Recipe $recipe)
     {
+        $this->authorize('view', $recipe);
+
         $recipe->load(['category', 'user', 'ingredients', 'steps']);
 
         return view('recipes.show', compact('recipe'));
@@ -133,8 +83,9 @@ class RecipeController extends Controller
      */
     public function edit(Recipe $recipe)
     {
-        $categories = Category::all();
+        $this->authorize('update', $recipe);
 
+        $categories = Category::all();
         $recipe->load(['ingredients', 'steps']);
 
         return view('recipes.edit', compact('recipe', 'categories'));
@@ -145,75 +96,26 @@ class RecipeController extends Controller
      */
     public function update(Request $request, Recipe $recipe)
     {
-        $request->validate([
+        $this->authorize('update', $recipe);
+
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'cooking_time' => 'nullable|integer',
             'difficulty' => 'required|in:easy,medium,hard',
-
             'category_id' => 'required|exists:categories,id',
-
             'ingredients' => 'required|array|min:1',
             'ingredients.*.name' => 'required|string|max:255',
-
             'steps' => 'required|array|min:1',
             'steps.*.instruction' => 'required|string',
-
             'image' => 'nullable|image|max:2048',
         ]);
 
-        // 2. IMAGE UPLOAD
-        $imagePath = null;
-
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-
-            $fileName = time().'_'.$file->getClientOriginalName();
-
-            $file->move(public_path('uploads/recipes'), $fileName);
-
-            $imagePath = 'uploads/recipes/'.$fileName;
-        }
-
-        // 3. UPDATE RECIPE
-        $recipe->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'cooking_time' => $request->cooking_time,
-            'difficulty' => $request->difficulty,
-            'category_id' => $request->category_id,
-            'ingredients' => $request->ingredients,
-            'steps' => $request->steps,
-            'image' => $imagePath ?? $recipe->image, // keep old image if
+        $this->service->update($recipe, $validated + [
+            'image' => $request->file('image'),
         ]);
 
-        // 4. UPDATE INGREDIENTS
-        $recipe->ingredients()->delete();
-        if (! empty($request->ingredients)) {
-            foreach ($request->ingredients as $ingredient) {
-                if (! empty($ingredient['name'])) {
-                    $recipe->ingredients()->create([
-                        'name' => $ingredient['name'],
-                        'quantity' => $ingredient['quantity'] ?? null,
-                    ]);
-                }
-            }
-        }
-
-        // 5. UPDATE STEPS
-        $recipe->steps()->delete();
-        if (! empty($request->steps)) {
-            foreach ($request->steps as $step) {
-                if (! empty($step['instruction'])) {
-                    $recipe->steps()->create([
-                        'step_number' => $step['step_number'] ?? 1,
-                        'instruction' => $step['instruction'],
-                    ]);
-                }
-            }
-        }
-
-        return redirect()->route('recipes.index')
+        return redirect()->route('recipes.show', $recipe->id)
             ->with('success', 'Recipe updated successfully!');
     }
 
@@ -222,6 +124,8 @@ class RecipeController extends Controller
      */
     public function destroy(Recipe $recipe)
     {
+        $this->authorize('delete', $recipe);
+
         $recipe->delete();
 
         return redirect()->route('recipes.index')

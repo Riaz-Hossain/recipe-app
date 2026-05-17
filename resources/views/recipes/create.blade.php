@@ -104,14 +104,17 @@
             <!-- INGREDIENTS -->
             <h2 class="text-xl font-semibold mb-3">Ingredients</h2>
 
-            <div id="ingredients-container">
-                <div class="flex gap-2 mb-2">
-                    <input type="text" name="ingredients[0][name]" placeholder="Ingredient name"
-                        class=" @error('ingredients.0.name') border-red-500 @enderror w-1/2 border rounded-lg p-2">
-                    <input type="text" name="ingredients[0][quantity]" placeholder="Quantity"
-                        class=" @error('ingredients.0.quantity') border-red-500 @enderror w-1/2 border rounded-lg p-2">
-                </div>
+
+            <div class="flex gap-2 mb-2 items-center">
+                <input type="text" name="ingredients[${ingredientIndex}][name]" class="w-1/2 border rounded-lg p-2">
+
+                <input type="text" name="ingredients[${ingredientIndex}][quantity]" class="w-1/2 border rounded-lg p-2">
+
+                <button type="button" onclick="removeItem(this)" class="bg-red-500 text-white px-3 py-1 rounded-lg">
+                    ✕
+                </button>
             </div>
+
             @error('ingredients')
                 <p class="text-red-500 text-sm mb-4">{{ $message }}</p>
             @enderror
@@ -129,11 +132,12 @@
             <!-- STEPS -->
             <h2 class="text-xl font-semibold mb-3">Steps</h2>
 
-            <div id="steps-container">
-                <div class="mb-2">
-                    <textarea name="steps[0][instruction]" placeholder="Step instruction"
-                        class=" @error('steps.0.instruction') border-red-500 @enderror w-full border rounded-lg p-2"></textarea>
-                </div>
+            <div class="mb-2 flex gap-2 items-center">
+                <textarea name="steps[${stepIndex}][instruction]" class="w-full border rounded-lg p-2"></textarea>
+
+                <button type="button" onclick="removeItem(this)" class="bg-red-500 text-white px-3 py-1 rounded-lg">
+                    ✕
+                </button>
             </div>
             @error('steps')
                 <p class="text-red-500 text-sm mb-4">{{ $message }}</p>

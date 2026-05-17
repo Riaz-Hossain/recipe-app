@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Recipe;
+use App\Policies\RecipePolicy;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,4 +24,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useTailwind();
     }
+
+    // policies are automatically discovered by Laravel,
+    // so we don't need to register them here
+    protected $policies = [
+        Recipe::class => RecipePolicy::class,
+    ];
 }
