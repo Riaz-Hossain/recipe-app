@@ -60,12 +60,20 @@ Recipe Studio is not just a CRUD app — it's structured like a **real product**
 
 ## 🛠️ Tech Stack
 
-- **Backend:** :contentReference[oaicite:0]{index=0} 10+
-- **Language:** :contentReference[oaicite:1]{index=1} 8+
-- **Database:** :contentReference[oaicite:2]{index=2}
-- **Frontend:** Blade + Tailwind CSS
-- **Auth:** Laravel Breeze
-- **Build Tool:** Vite
+**Backend**
+- Laravel 10+
+- PHP 8+
+
+**Frontend**
+- Blade Templates
+- Tailwind CSS
+- Vite
+
+**Database**
+- MySQL
+
+**Auth**
+- Laravel Breeze
 
 ---
 
