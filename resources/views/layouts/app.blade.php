@@ -9,28 +9,28 @@
 <body class="bg-gray-50 text-gray-900">
 
     <!-- NAVBAR -->
-    <nav class="bg-white border-b sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto flex items-center justify-between p-4">
+    <div class="flex justify-between items-center p-4 bg-white shadow">
 
-            <!-- Logo -->
-            <a href="{{ route('recipes.index') }}" class="text-xl font-bold text-green-600">
-                🍽 RecipeHub
-            </a>
+        <a href="/" class="font-bold text-lg">Recipe Studio</a>
 
-            <!-- Menu -->
-            <div class="flex items-center gap-4">
-                <a href="{{ route('recipes.create') }}"
-                    class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
-                    + Create
-                </a>
+        <div class="flex items-center gap-4">
 
-                <span class="text-sm text-gray-500">
-                    Welcome 👋
-                </span>
-            </div>
+            @auth
+                <a href="{{ route('dashboard') }}">Dashboard</a>
+                <a href="{{ route('recipes.index') }}">Recipes</a>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="text-red-500">Logout</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}">Login</a>
+                <a href="{{ route('register') }}">Register</a>
+            @endauth
 
         </div>
-    </nav>
+
+    </div>
 
     <!-- PAGE -->
     <main class="max-w-6xl mx-auto p-6">
