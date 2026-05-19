@@ -106,6 +106,7 @@ class RecipeController extends Controller
             'category_id' => 'required|exists:categories,id',
             'ingredients' => 'required|array|min:1',
             'ingredients.*.name' => 'required|string|max:255',
+            'ingredients.*.quantity' => 'nullable|string|max:255',
             'steps' => 'required|array|min:1',
             'steps.*.instruction' => 'required|string',
             'image' => 'nullable|image|max:2048',

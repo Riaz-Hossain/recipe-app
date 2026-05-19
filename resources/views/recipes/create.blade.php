@@ -104,16 +104,25 @@
             <!-- INGREDIENTS -->
             <h2 class="text-xl font-semibold mb-3">Ingredients</h2>
 
+            <div id="ingredients-container">
 
-            <div class="flex gap-2 mb-2 items-center">
-                <input type="text" name="ingredients[${ingredientIndex}][name]" class="w-1/2 border rounded-lg p-2">
+                <div class="flex gap-2 mb-2 items-center">
+                    <input type="text" name="ingredients[0][name]" class="w-1/2 border rounded-lg p-2"
+                        placeholder="Ingredient name">
 
-                <input type="text" name="ingredients[${ingredientIndex}][quantity]" class="w-1/2 border rounded-lg p-2">
+                    <input type="text" name="ingredients[0][quantity]" class="w-1/2 border rounded-lg p-2"
+                        placeholder="Quantity">
 
-                <button type="button" onclick="removeItem(this)" class="bg-red-500 text-white px-3 py-1 rounded-lg">
-                    ✕
-                </button>
+                    <button type="button" onclick="removeItem(this)" class="bg-red-500 text-white px-3 py-1 rounded-lg">
+                        ✕
+                    </button>
+                </div>
+
             </div>
+
+            <button type="button" onclick="addIngredient()" class="text-blue-500 mb-6">
+                + Add Ingredient
+            </button>
 
             @error('ingredients')
                 <p class="text-red-500 text-sm mb-4">{{ $message }}</p>
@@ -125,20 +134,26 @@
                 <p class="text-red-500 text-sm mb-4">{{ $message }}</p>
             @enderror
 
-            <button type="button" onclick="addIngredient()" class="text-blue-500 mb-6">+ Add Ingredient</button>
-
             <hr class="my-6">
 
             <!-- STEPS -->
             <h2 class="text-xl font-semibold mb-3">Steps</h2>
 
-            <div class="mb-2 flex gap-2 items-center">
-                <textarea name="steps[${stepIndex}][instruction]" class="w-full border rounded-lg p-2"></textarea>
+            <div id="steps-container">
 
-                <button type="button" onclick="removeItem(this)" class="bg-red-500 text-white px-3 py-1 rounded-lg">
-                    ✕
-                </button>
+                <div class="flex gap-2 mb-2 items-center">
+                    <textarea name="steps[0][instruction]" class="w-full border rounded-lg p-2" placeholder="Step instruction"></textarea>
+
+                    <button type="button" onclick="removeItem(this)" class="bg-red-500 text-white px-3 py-1 rounded-lg">
+                        ✕
+                    </button>
+                </div>
+
             </div>
+
+            <button type="button" onclick="addStep()" class="text-blue-500 mb-6">
+                + Add Step
+            </button>
             @error('steps')
                 <p class="text-red-500 text-sm mb-4">{{ $message }}</p>
             @enderror
@@ -146,8 +161,6 @@
                 <p class="text-red-500 text-sm mb-4">{{ $message }}</p>
             @enderror
 
-
-            <button type="button" onclick="addStep()" class="text-blue-500 mb-6">+ Add Step</button>
 
             <!-- Submit -->
             <div class="flex justify-between items-center">
@@ -167,59 +180,52 @@
     <!-- JS for dynamic fields -->
     <script>
         let ingredientIndex = 1;
+        let stepIndex = 1;
 
         function addIngredient() {
             const container = document.getElementById('ingredients-container');
 
             const html = `
-        <div class="flex gap-2 mb-2">
-            <input type="text" name="ingredients[${ingredientIndex}][name]" placeholder="Ingredient name"
-                class="w-1/2 border rounded-lg p-2">
-            <input type="text" name="ingredients[${ingredientIndex}][quantity]" placeholder="Quantity"
-                class="w-1/2 border rounded-lg p-2">
+        <div class="flex gap-2 mb-2 items-center">
+            <input type="text" name="ingredients[${ingredientIndex}][name]"
+                class="w-1/2 border rounded-lg p-2" placeholder="Ingredient name">
+
+            <input type="text" name="ingredients[${ingredientIndex}][quantity]"
+                class="w-1/2 border rounded-lg p-2" placeholder="Quantity">
+
+            <button type="button" onclick="removeItem(this)"
+                class="bg-red-500 text-white px-3 py-1 rounded-lg">
+                ✕
+            </button>
         </div>
-    `;
+        `;
 
             container.insertAdjacentHTML('beforeend', html);
-
             ingredientIndex++;
         }
-
-
-
-        let stepIndex = 1;
 
         function addStep() {
             const container = document.getElementById('steps-container');
 
             const html = `
-        <div class="mb-2">
-            <textarea name="steps[${stepIndex}][instruction]" placeholder="Step instruction"
-                class="w-full border rounded-lg p-2"></textarea>
+        <div class="flex gap-2 mb-2 items-center">
+            <textarea name="steps[${stepIndex}][instruction]"
+                class="w-full border rounded-lg p-2"
+                placeholder="Step instruction"></textarea>
+
+            <button type="button" onclick="removeItem(this)"
+                class="bg-red-500 text-white px-3 py-1 rounded-lg">
+                ✕
+            </button>
         </div>
-    `;
+        `;
 
             container.insertAdjacentHTML('beforeend', html);
-
             stepIndex++;
         }
 
-
-
-        function previewImage(event) {
-            const input = event.target;
-            const preview = document.getElementById('imagePreview');
-
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.classList.remove('hidden');
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
+        function removeItem(button) {
+            button.closest('div').remove();
         }
     </script>
 

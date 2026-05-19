@@ -22,8 +22,8 @@ class RecipePolicy
         return $user->id === $recipe->user_id;
     }
 
-    public function create(User $user)
+    public function create(?User $user)
     {
-        return true;
+        return $user !== null;
     }
 }
