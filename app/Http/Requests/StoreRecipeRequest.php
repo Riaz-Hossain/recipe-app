@@ -31,6 +31,7 @@ class StoreRecipeRequest extends FormRequest
 
             'ingredients' => 'required|array|min:1',
             'ingredients.*.name' => 'required|string',
+            'ingredients.*.quantity' => 'required|numeric|min:0',
 
             'steps' => 'required|array|min:1',
             'steps.*.instruction' => 'required|string',
